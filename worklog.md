@@ -142,3 +142,34 @@ Stage Summary:
 - `.env` intentionally NOT pushed (local config); `.env.example` provided for cloners.
 - Upstream tracking configured: `git push`/`git pull` will work without specifying remote/branch.
 - Task complete.
+
+---
+Task ID: 16
+Agent: main (Z.ai Code)
+Task: Connect project to Supabase (PostgreSQL cloud database) and push changes to GitHub.
+
+Work Log:
+- Switched Prisma datasource from SQLite to PostgreSQL (Supabase).
+- Connection string: user provided `postgresql://postgres:Hazwanrais@12@db.briqnbwwfztfphyivefq.supabase.co:5432/postgres`.
+  - Issue 1: password `Hazwanrais@12` contains `@` which breaks URL parsing → URL-encoded as `%40`.
+  - Issue 2: direct connection port 5432 is blocked by sandbox network (only HTTP/HTTPS outbound allowed).
+  - Solution: use Supabase connection pooler (PgBouncer) which is reachable on port 6543/5432 via `aws-0-{region}.pooler.supabase.com`.
+- Tested all 14 Supabase pooler regions using Node.js `pg` client to find the correct one:
+  - ap-southeast-1, ap-southeast-2, ap-northeast-1 → "tenant/user not found"
+  - ✅ ap-northeast-2 (Seoul) → CONNECTED!
+- Configured Prisma schema with both `url` (pooled, port 6543, PgBouncer) and `directUrl` (direct, port 5432) for migrations.
+- Updated db.ts to use `dotenv` with `override: true` — sandbox has a system-level `DATABASE_URL` pointing to old SQLite path that overrides .env file values.
+- Ran `prisma db push` → schema created in Supabase (Report table in public schema).
+- Ran seed script → 7 reports + PDFs generated and stored in Supabase.
+- Verified via Supabase REST API: `GET /rest/v1/Report` returns all 7 records ✅.
+- Verified via Agent Browser: report list view shows all 7 reports from Supabase.
+- Untracked `db/custom.db` (old local SQLite, no longer needed), added `db/*.db` to .gitignore.
+- Updated README with Supabase setup instructions (pooler connection strings, region, password URL-encoding note).
+- Committed and pushed to GitHub: commit `533e2db` "feat: connect to Supabase (PostgreSQL) as cloud database".
+
+Stage Summary:
+- ✅ Project now connected to Supabase PostgreSQL (cloud database at ap-northeast-2 / Seoul region).
+- Connection uses PgBouncer pooler (port 6543) for runtime + direct connection (port 5432) for migrations.
+- 7 seeded reports live in Supabase, verified via REST API.
+- All changes pushed to GitHub: https://github.com/muhammadhazwan-star/SistemLaporan
+- App fully functional with cloud database — persistent, scalable, accessible from anywhere.
