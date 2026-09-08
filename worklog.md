@@ -119,3 +119,26 @@ Stage Summary:
   - Classic PAT: no scopes selected at all (`x-oauth-scopes` empty).
 - User must create a classic PAT with the `repo` scope checked (full repo access), or a fine-grained PAT with `Contents: Read and write` for the SistemLaporan repo.
 - All 4 commits + 115 files remain ready to push; remote `origin` configured and clean.
+
+---
+Task ID: 15
+Agent: main (Z.ai Code)
+Task: Push to GitHub repo https://github.com/muhammadhazwan-star/SistemLaporan.git using valid classic PAT.
+
+Work Log:
+- User provided new classic PAT (`ghp_ItGyoFWX...`).
+- Verified token: HTTP 200, `x-oauth-scopes: repo` ✅ (finally has the correct scope).
+- Pushed branch `main` to `origin`: `* [new branch] main -> main` — SUCCESS.
+- Set up upstream tracking: `main` now tracks `origin/main`.
+- Verified via GitHub API:
+  - Repo `muhammadhazwan-star/SistemLaporan`: Public, default branch `main`, pushed_at 2026-09-08T04:45:24Z.
+  - `.env`: HTTP 404 at GitHub (not pushed — safe, as intended).
+  - `README.md`: HTTP 200 (present).
+  - All directories present: src/, prisma/, public/, db/, scripts/, etc.
+
+Stage Summary:
+- ✅ PUSH BERJAYA. Repo kini live di https://github.com/muhammadhazwan-star/SistemLaporan
+- All 6 commits + 115+ files uploaded including: source code, real logo, favicon, 4 sample activity photos, 7 generated PDF reports, dummy database (db/custom.db), README.md, .env.example, worklog.md.
+- `.env` intentionally NOT pushed (local config); `.env.example` provided for cloners.
+- Upstream tracking configured: `git push`/`git pull` will work without specifying remote/branch.
+- Task complete.
