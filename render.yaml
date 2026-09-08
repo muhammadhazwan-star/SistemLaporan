@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: alamin-edu-oasis-lms
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/reports
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+    disk:
+      name: uploads-disk
+      mountPath: /app/public
+      sizeGB: 2

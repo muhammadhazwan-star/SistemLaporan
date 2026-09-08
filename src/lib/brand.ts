@@ -1,5 +1,8 @@
 // Brand & system constants for Al Amin Edu Oasis
 // Used by both frontend UI and backend PDF generation to keep identity consistent.
+import path from "path";
+
+const ROOT = process.cwd();
 
 export const BRAND = {
   name: "Al Amin Edu Oasis",
@@ -17,15 +20,17 @@ export const BRAND = {
     darkGray: "#333333",
   },
 
+  // Static asset paths (relative to web root, served by Next.js)
   logoPath: "/logo.png",
-  logoAbsPath: "/home/z/my-project/public/logo.png",
+  // Absolute path to logo on disk (for PDF generation) — resolves relative to cwd
+  logoAbsPath: path.join(ROOT, "public", "logo.png"),
 
   // Directory for uploaded activity photos (served statically)
-  uploadDir: "/home/z/my-project/public/uploads",
+  uploadDir: path.join(ROOT, "public", "uploads"),
   uploadUrlPrefix: "/uploads",
 
   // Directory for generated PDF reports
-  reportDir: "/home/z/my-project/public/reports",
+  reportDir: path.join(ROOT, "public", "reports"),
   reportUrlPrefix: "/reports",
 } as const;
 

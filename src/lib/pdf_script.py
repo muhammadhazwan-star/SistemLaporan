@@ -429,7 +429,7 @@ def build_pdf(report, out_path):
             chunk = photos[i:i + cols]
             row_imgs = []
             for p in chunk:
-                abs_path = "/home/z/my-project/public" + p if p.startswith("/") else p
+                abs_path = os.path.join(os.environ.get("PUBLIC_DIR", "/app/public"), p.lstrip("/")) if p.startswith("/") else p
                 try:
                     if os.path.exists(abs_path):
                         img = Image(abs_path, width=cell_w - 8, height=cell_h - 6)
@@ -476,7 +476,7 @@ def main():
         sys.exit(1)
     # Default to the brand logo if none was provided
     if not report.get("logoPath"):
-        report["logoPath"] = "/home/z/my-project/public/logo.png"
+        report["logoPath"] = os.path.join(os.environ.get("PUBLIC_DIR", "/app/public"), "logo.png")
     # Pretty date string for header
     if "tarikhDijana" in report:
         try:

@@ -36,7 +36,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       if (filename) {
         const fs = await import("fs");
         const path = await import("path");
-        const pdfPath = path.join("/home/z/my-project/public/reports", filename);
+        const pdfPath = path.join(process.cwd(), "public", "reports", filename);
         if (fs.existsSync(pdfPath)) {
           fs.unlinkSync(pdfPath);
         }

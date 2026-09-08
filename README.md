@@ -66,6 +66,55 @@ Buka `http://localhost:3000`.
 
 > Rekod laporan contoh (7 buah) disimpan dalam pangkalan data Supabase. Fail PDF yang dijana disimpan dalam `public/reports/`. Anda boleh menjana semula dengan `bun run seed`.
 
+## Deployment
+
+Projek ini menggunakan **Docker** (Node.js + Python) kerana penjanaan PDF memerlukan Python (ReportLab). Fail-fail deployment disediakan: `Dockerfile`, `.dockerignore`, `railway.json`, `render.yaml`.
+
+### Pilihan 1: Railway (paling mudah — auto-deploy dari GitHub)
+
+1. Pergi ke **https://railway.app** → New Project → Deploy from GitHub repo
+2. Pilih repo `muhammadhazwan-star/SistemLaporan`
+3. Railway akan auto-detect `Dockerfile` dan build
+4. Tambah **Variables** (Environment Variables):
+   ```
+   DATABASE_URL=postgresql://postgres.briqnbwwfztfphyivefq:Hazwanrais%4012@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+   DIRECT_URL=postgresql://postgres.briqnbwwfztfphyivefq:Hazwanrais%4012@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres
+   ```
+5. Tambah **Volume** untuk persistent storage (uploads/reports):
+   - Mount path: `/app/public`
+   - Size: 2GB
+6. Deploy → Railway akan beri URL awam (contoh: `https://sistemlaporan.up.railway.app`)
+
+### Pilihan 2: Render
+
+1. Pergi ke **https://render.com** → New → Web Service → Connect repo GitHub
+2. Render akan auto-detect `render.yaml`
+3. Tambah environment variables yang sama (DATABASE_URL + DIRECT_URL)
+4. Deploy
+
+### Pilihan 3: Docker (mana-mana VPS / cloud)
+
+```bash
+# Build image
+docker build -t alamin-edu-oasis-lms .
+
+# Run container
+docker run -d \
+  --name alamin-lms \
+  -p 3000:3000 \
+  -e DATABASE_URL="postgresql://postgres.briqnbwwfztfphyivefq:Hazwanrais%4012@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1" \
+  -e DIRECT_URL="postgresql://postgres.briqnbwwfztfphyivefq:Hazwanrais%4012@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" \
+  -v alamin-uploads:/app/public/uploads \
+  -v alamin-reports:/app/public/reports \
+  alamin-edu-oasis-lms
+```
+
+### ⚠️ Nota Penting
+
+- **Vercel tidak disokong** — penjanaan PDF menggunakan Python (ReportLab) yang memerlukan child process, tidak tersedia di Vercel serverless.
+- **Persistent volume diperlukan** — gambar yang dimuat naik dan PDF yang dijana disimpan di `public/uploads/` dan `public/reports/`. Tanpa persistent volume, fail akan hilang selepas redeploy.
+- **Supabase** sudah di-konfigurasi sebagai pangkalan data cloud, jadi data laporan kekal merentas deploy.
+
 ## Struktur Projek
 
 ```

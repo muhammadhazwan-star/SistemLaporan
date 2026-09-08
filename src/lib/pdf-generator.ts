@@ -31,7 +31,10 @@ export interface ReportData {
  * Writes the file under public/reports and returns its public URL.
  */
 export async function generateReportPdf(report: ReportData): Promise<string> {
+  // Resolve the PDF script path relative to this file (works in dev and Docker standalone)
   const scriptPath = path.join(process.cwd(), "src", "lib", "pdf_script.py");
+  // Public directory (for resolving uploaded image URLs inside the PDF)
+  const publicDir = path.join(process.cwd(), "public");
 
   if (!fs.existsSync(BRAND.reportDir)) {
     fs.mkdirSync(BRAND.reportDir, { recursive: true });
@@ -52,6 +55,10 @@ export async function generateReportPdf(report: ReportData): Promise<string> {
   await new Promise<void>((resolve, reject) => {
     const proc = spawn("python3", [scriptPath], {
       stdio: ["pipe", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        PUBLIC_DIR: publicDir,
+      },
     });
 
     let stderr = "";
