@@ -11,7 +11,7 @@ Dibangunkan berdasarkan dokumen PRD (`PRD_Sistem_LMS_AlAminEduOasis.docx`).
 - **Pratonton & Sunting** — Edit mana-mana medan sebelum menjana PDF.
 - **PDF Beridentiti Korporat** — Logo, tema turquoise (#0E8C96), statistik kehadiran, QR code Google Form, galeri gambar, footer nombor halaman.
 - **Senarai Laporan** — Carian, penapis (tahun/bulan/status), muat turun, jana semula, padam.
-- **Pangkalan Data Kekal** — Prisma + SQLite menyimpan rekod laporan secara kekal.
+- **Pangkalan Data Kekal** — Prisma + Supabase (PostgreSQL) menyimpan rekod laporan secara kekal di cloud.
 - **Reka Bentuk Brutalist** — UI/UX neo-brutalist dengan sempadan tebal, bayang offset keras, sudut tajuk, tipografi monospace.
 
 ## Tech Stack
@@ -19,7 +19,7 @@ Dibangunkan berdasarkan dokumen PRD (`PRD_Sistem_LMS_AlAminEduOasis.docx`).
 | Komponen | Teknologi |
 |---|---|
 | Frontend | Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4, shadcn/ui |
-| Backend | Next.js API Routes, Prisma ORM, SQLite |
+| Backend | Next.js API Routes, Prisma ORM, Supabase (PostgreSQL) |
 | AI | z-ai-web-dev-sdk (GLM) |
 | PDF | ReportLab (Python) + qrcode + Pillow |
 | Ikon | Lucide React |
@@ -35,21 +35,24 @@ bun install
 
 ### 2. Konfigurasi environment
 
-Salin fail contoh dan jadikan `.env` (DATABASE_URL sudah pun portabel):
+Sistem ini menggunakan **Supabase (PostgreSQL)** sebagai pangkalan data cloud. Salin fail contoh dan kemaskini dengan kredensial Supabase anda:
 
 ```bash
 cp .env.example .env
 ```
 
-Kandungan `.env`:
+Kandungan `.env` (gantikan `YOUR_PROJECT_REF`, `YOUR_PASSWORD`, dan `REGION` dengan nilai Supabase anda):
 ```
-DATABASE_URL=file:./db/custom.db
+DATABASE_URL=postgresql://postgres.YOUR_PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+DIRECT_URL=postgresql://postgres.YOUR_PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
 ```
+
+> **Nota**: `DATABASE_URL` guna connection pooler (port 6543, PgBouncer) untuk runtime, manakala `DIRECT_URL` guna direct connection (port 5432) untuk Prisma migrations/db push. Password yang mengandungi `@` perlu di-URL-encode sebagai `%40`.
 
 ### 3. Sediakan pangkalan data
 
 ```bash
-bun run db:push      # cipta skema pangkalan data
+bun run db:push      # cipta skema pangkalan data di Supabase
 bun run seed         # tambah 7 laporan contoh + jana PDF
 ```
 
@@ -61,7 +64,7 @@ bun run dev
 
 Buka `http://localhost:3000`.
 
-> Rekod laporan contoh (7 buah) dan fail PDF yang dijana sudah disertakan dalam repo (di `db/custom.db` dan `public/reports/`). Anda boleh menjana semula dengan `bun run seed`.
+> Rekod laporan contoh (7 buah) disimpan dalam pangkalan data Supabase. Fail PDF yang dijana disimpan dalam `public/reports/`. Anda boleh menjana semula dengan `bun run seed`.
 
 ## Struktur Projek
 
