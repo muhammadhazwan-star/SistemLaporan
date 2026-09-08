@@ -1,0 +1,45 @@
+// Sistem LMS Al Amin Edu Oasis — Modul Penjanaan Laporan Kursus
+// Skema pangkalan data untuk menyimpan rekod laporan kursus (persistent)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Report {
+  // Pengecam unik setiap laporan
+  id           String   @id @default(cuid())
+
+  // Maklumat asas kursus
+  namaKursus   String
+  tarikh       String   // Tarikh kursus dijalankan (ISO / bebas teks)
+  masa         String   // Masa mula & tamat kursus
+  lokasi       String   // Lokasi kursus
+  kehadiran    String   // Bilangan kehadiran (contoh: "16/16")
+  hadiran      Int      @default(0)  // Bilangan peserta hadir (nombor)
+  jumlah       Int      @default(0)  // Jumlah peserta dijangka (nombor)
+
+  // Kandungan janaan AI
+  ringkasanAi  String   @default("") // Ringkasan eksekutif laporan
+  kelebihanAi  String   @default("") // Hasil jana AI bagi kelebihan
+  kelemahanAi  String   @default("") // Hasil jana AI bagi kelemahan
+  cadanganAi   String   @default("") // Cadangan penambahbaikan janaan AI
+
+  // Pautan & media
+  pautanGform  String   @default("") // Pautan borang maklum balas
+  gambarUrls   String   @default("[]") // JSON array of image URLs (sqlite tidak sokong list)
+
+  // Output
+  urlPdf       String   @default("") // Pautan fail PDF laporan
+
+  // Metadata
+  status       String   @default("Selesai") // Selesai / Draf
+  penyedia     String   @default("") // Nama penyedia (direkodkan manual)
+  rawInput     String   @default("") // Teks mentah asal (untuk jana semula)
+  tarikhDijana DateTime @default(now()) // Cap masa laporan dijana
+  updatedAt    DateTime @updatedAt
+}
