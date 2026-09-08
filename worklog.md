@@ -35,3 +35,24 @@ Stage Summary:
 - UI: neo-brutalist (thick borders, hard offset shadows, sharp corners, monospace labels, turquoise/white/dark-gray palette), responsive mobile-first, sticky footer.
 - Files created: prisma/schema.prisma, src/lib/{brand.ts,types.ts,pdf-generator.ts,pdf_script.py}, src/app/api/{reports/generate,reports,reports/[id],upload}/route.ts, src/components/{generate-view.tsx,report-list-view.tsx}, scripts/seed.ts, public/{logo.png,favicon.png,uploads/*}.
 - All requirements met. Verified via Agent Browser end-to-end.
+
+---
+Task ID: 11
+Agent: main (Z.ai Code)
+Task: Replace the AI-generated placeholder logo with the real official Al Amin Edu Oasis logo (uploaded as AAEO AS AT 300625.jpg).
+
+Work Log:
+- Inspected uploaded real logo (AAEO AS AT 300625.jpg): 500x500 JPEG, turquoise circular arc emblem with water/wave motif, contains stacked text "AL AMIN" / "EDU OASIS" / "SDN BHD" on white background. Color palette already matches the brutalist turquoise theme (#0E8C96 family) — no theme recoloring needed.
+- Processed the real logo with PIL: auto-trimmed surrounding whitespace, padded to a tight square (399x399), saved as public/logo.png (high-res) and public/favicon.png (256x256).
+- Since the real logo CONTAINS the brand name as text, removed the now-redundant "AL AMIN EDU OASIS" text that was previously displayed next to the logo in both the web header and PDF header (the logo is self-contained branding).
+- Updated web header (src/app/page.tsx): enlarged logo box from 56px to 80px (sm:96px) so all 3 text lines (AL AMIN / EDU OASIS / SDN BHD) are legible; replaced the redundant brand-name title with system-purpose text ("SISTEM PENJANAAN / LAPORAN KURSUS / Berbantukan AI · GLM").
+- Updated PDF header (src/lib/pdf_script.py): enlarged logo box from 16mm to 20mm; replaced the redundant "AL AMIN EDU OASIS" + "Sdn Bhd · Unit..." center text with just "LAPORAN KURSUS" + "Unit Latihan & Pembangunan Guru & Staf" (the logo carries the brand).
+- Re-ran seed script to regenerate all 7 PDF reports with the real logo.
+- Verified via Agent Browser: real logo renders clearly in both UI header (all 3 text lines legible, no clipping, no redundancy) and PDF header (logo in white box on turquoise band, fits nicely).
+
+Stage Summary:
+- Real official Al Amin Edu Oasis logo now used everywhere (web header, favicon, PDF reports).
+- Logo box enlarged so the embedded brand text is legible at all sizes.
+- Removed redundant brand-name text next to the logo (logo is self-contained branding).
+- All 7 seeded PDFs regenerated with the real logo.
+- No theme changes needed — real logo's turquoise palette already matches the brutalist theme.

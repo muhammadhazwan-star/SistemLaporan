@@ -44,9 +44,11 @@ export default function Home() {
       {/* ===== Header ===== */}
       <header className="sticky top-0 z-40 border-b-2 border-foreground bg-background">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          {/* Brand */}
+          {/* Brand — the real logo already contains "AL AMIN EDU OASIS SDN BHD",
+              so we show it large enough for its text to be legible and do NOT repeat
+              the brand name beside it. Next to it we show only the system purpose. */}
           <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12 shrink-0 border-2 border-foreground bg-white p-0.5 brutal-shadow-sm">
+            <div className="relative h-20 w-20 shrink-0 border-2 border-foreground bg-white p-1 brutal-shadow-sm sm:h-24 sm:w-24">
               <img
                 src={BRAND.logoPath}
                 alt={`Logo ${BRAND.name}`}
@@ -54,11 +56,14 @@ export default function Home() {
               />
             </div>
             <div className="leading-tight">
-              <h1 className="font-mono text-base font-extrabold uppercase tracking-tight text-foreground sm:text-lg">
-                {BRAND.name}
-              </h1>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/60">
-                {BRAND.module}
+              <p className="font-mono text-sm font-extrabold uppercase tracking-tight text-foreground sm:text-base">
+                Sistem Penjanaan
+              </p>
+              <p className="font-mono text-sm font-extrabold uppercase tracking-tight text-foreground sm:text-base">
+                Laporan Kursus
+              </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
+                Berbantukan AI · GLM
               </p>
             </div>
           </div>

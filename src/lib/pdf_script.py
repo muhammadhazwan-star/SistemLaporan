@@ -171,39 +171,37 @@ def header_footer(canv, doc, report, _logo_cache={}):
     canv.setFillColor(BLACK)
     canv.rect(0, PAGE_H - band_h - 2, PAGE_W, 2, stroke=0, fill=1)
 
-    # Logo (flattened onto white so it is visible on the turquoise band)
+    # Logo (real brand emblem — already contains "AL AMIN EDU OASIS SDN BHD" text,
+    # so the logo IS the brand identity; no redundant company-name text needed)
     logo_path = report.get("logoPath", "")
     if "_path" not in _logo_cache or _logo_cache.get("_path") != logo_path:
         _logo_cache["_path"] = logo_path
         _logo_cache["_flat"] = _prepare_logo(logo_path)
     flat_logo = _logo_cache.get("_flat")
+    logo_box = 20 * mm
     if flat_logo:
         # white plate behind the logo
-        box = 16 * mm
         canv.setFillColor(WHITE)
-        canv.rect(MARGIN, PAGE_H - band_h + 5 * mm, box, box, stroke=0, fill=1)
+        canv.rect(MARGIN, PAGE_H - band_h + 3 * mm, logo_box, logo_box, stroke=0, fill=1)
         canv.setStrokeColor(BLACK)
         canv.setLineWidth(1)
-        canv.rect(MARGIN, PAGE_H - band_h + 5 * mm, box, box, stroke=1, fill=0)
+        canv.rect(MARGIN, PAGE_H - band_h + 3 * mm, logo_box, logo_box, stroke=1, fill=0)
         try:
-            canv.drawImage(flat_logo, MARGIN + 1, PAGE_H - band_h + 5 * mm + 1,
-                           width=box - 2, height=box - 2, preserveAspectRatio=True, anchor='c')
+            canv.drawImage(flat_logo, MARGIN + 1, PAGE_H - band_h + 3 * mm + 1,
+                           width=logo_box - 2, height=logo_box - 2, preserveAspectRatio=True, anchor='c')
         except Exception:
             pass
 
-    # Company name
+    # Module/unit info next to the logo (the logo itself carries the brand name)
     canv.setFillColor(WHITE)
-    canv.setFont(BOLD, 13)
-    canv.drawString(MARGIN + 20 * mm, PAGE_H - 9 * mm, "AL AMIN EDU OASIS")
-    canv.setFont(BODY, 8.5)
+    canv.setFont(BOLD, 12)
+    canv.drawString(MARGIN + logo_box + 3 * mm, PAGE_H - 9 * mm, "LAPORAN KURSUS")
+    canv.setFont(BODY, 8)
     canv.setFillColor(colors.HexColor("#DDF4F5"))
-    canv.drawString(MARGIN + 20 * mm, PAGE_H - 14 * mm, "Sdn Bhd  ·  Unit Latihan & Pembangunan Guru & Staf")
+    canv.drawString(MARGIN + logo_box + 3 * mm, PAGE_H - 14 * mm, "Unit Latihan & Pembangunan Guru & Staf")
     # Right side label
-    canv.setFont(BOLD, 11)
+    canv.setFont(BOLD, 9)
     canv.setFillColor(WHITE)
-    canv.drawRightString(PAGE_W - MARGIN, PAGE_H - 11 * mm, "LAPORAN KURSUS")
-    canv.setFont(BODY, 7.5)
-    canv.setFillColor(colors.HexColor("#DDF4F5"))
     gen = report.get("tarikhDijana", "")
     canv.drawRightString(PAGE_W - MARGIN, PAGE_H - 15.5 * mm, f"Dijana: {gen}")
 
