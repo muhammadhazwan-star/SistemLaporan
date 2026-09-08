@@ -173,3 +173,32 @@ Stage Summary:
 - 7 seeded reports live in Supabase, verified via REST API.
 - All changes pushed to GitHub: https://github.com/muhammadhazwan-star/SistemLaporan
 - App fully functional with cloud database — persistent, scalable, accessible from anywhere.
+
+---
+Task ID: 17
+Agent: main (Z.ai Code)
+Task: Prepare project for production deployment.
+
+Work Log:
+- Created Dockerfile (multi-stage): Node 20 slim + Python 3 with ReportLab/qrcode/Pillow + fonts-dejavu. Builds Next.js standalone, copies Prisma client, PDF script, creates persistent dirs, healthcheck on /api/reports.
+- Created .dockerignore (exclude node_modules, .next, .git, logs, env files, etc).
+- Created railway.json (Dockerfile builder, healthcheck, auto-restart).
+- Created render.yaml (Docker runtime, persistent disk 2GB at /app/public, env vars).
+- Made ALL paths portable (replaced hardcoded /home/z/my-project/... with process.cwd()):
+  - src/lib/brand.ts: logoAbsPath, uploadDir, reportDir → path.join(process.cwd(), ...)
+  - src/lib/pdf-generator.ts: pass PUBLIC_DIR env to Python script subprocess
+  - src/lib/pdf_script.py: use os.environ.get("PUBLIC_DIR", "/app/public") for logo + gallery image paths
+  - src/app/api/reports/[id]/route.ts: PDF delete path → process.cwd()
+- Added public/uploads/.gitkeep + public/reports/.gitkeep for persistent directories.
+- Updated package.json: renamed to "alamin-edu-oasis-lms" v1.0.0, start script uses node (not bun).
+- Added comprehensive Deployment section to README: Railway (1-click from GitHub), Render, Docker (VPS). Noted Vercel NOT supported (Python child_process).
+- Verified: API returns 7 reports from Supabase after path changes, lint clean, dev server 200 OK.
+- Committed and pushed to GitHub (commit 82e1a1e).
+
+Stage Summary:
+- ✅ Project is deployment-ready via Docker.
+- All paths now portable (works in any container/VPS, not just sandbox).
+- Deployment files: Dockerfile, .dockerignore, railway.json, render.yaml.
+- README has step-by-step deploy instructions for Railway/Render/Docker.
+- User can now deploy by connecting GitHub repo to Railway or Render.
+- Supabase cloud DB already configured — data persists across deployments.
