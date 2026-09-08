@@ -56,3 +56,26 @@ Stage Summary:
 - Removed redundant brand-name text next to the logo (logo is self-contained branding).
 - All 7 seeded PDFs regenerated with the real logo.
 - No theme changes needed — real logo's turquoise palette already matches the brutalist theme.
+
+---
+Task ID: 12
+Agent: main (Z.ai Code)
+Task: Link the project to GitHub repo https://github.com/muhammadhazwan-star/SistemLaporan.git and push.
+
+Work Log:
+- Checked current git state: working tree clean, branch main, no remotes configured.
+- Made DATABASE_URL portable: changed from absolute path `file:/home/z/my-project/db/custom.db` to relative `file:./db/custom.db` (works anywhere after clone). Verified dev server + API still work (7 reports intact).
+- Untracked `.env` (local config, should never be committed) via `git rm --cached .env` — file kept on disk for the running dev server.
+- Created `.env.example` with the portable DATABASE_URL so cloners know what to set.
+- Updated `.gitignore`: allow `.env.example` through, ignore Prisma transient files (`db/*.db-journal`, `db/*.db-wal`, `db/*.db-shm`).
+- Wrote comprehensive README.md (Malay): features, tech stack, setup steps, project structure, usage, npm scripts, brand identity.
+- Committed all changes: `chore: untrack .env, add .env.example, README, gitignore polish`.
+- Added GitHub remote: `origin → https://github.com/muhammadhazwan-star/SistemLaporan.git`.
+- Attempted push: FAILED — sandbox has no GitHub credentials (no PAT, no SSH key, no gh CLI, no credential helper). Push requires user authentication.
+
+Stage Summary:
+- Remote `origin` added and pointing to the correct GitHub repo.
+- 4 commits ready to push (Initial commit + 2 feature commits + env/README chore), 115 files tracked.
+- Working tree clean, branch `main` ready.
+- `.env` is untracked (safe), `.env.example` + `README.md` added.
+- PUSH PENDING: user must authenticate with GitHub (PAT or SSH) to complete the push. Command: `git push -u origin main`.
