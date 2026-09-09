@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import crypto from "crypto";
-import { BRAND } from "@/lib/brand";
+import { supabase, UPLOADS_BUCKET } from "@/lib/supabase";
 
 // Image upload endpoint for course activity photos.
-// Accepts multipart/form-data with one or more "files" fields,
-// stores them under public/uploads, and returns their public URLs.
+// Stores images in Supabase Storage (cloud) so it works on read-only filesystems
+// (Vercel, serverless, Docker without persistent volumes).
+// Returns public URLs that can be used in the UI and embedded in PDFs.
 
 const ALLOWED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB per file
@@ -18,10 +17,6 @@ export async function POST(req: NextRequest) {
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "Tiada fail gambar diterima." }, { status: 400 });
-    }
-
-    if (!fs.existsSync(BRAND.uploadDir)) {
-      fs.mkdirSync(BRAND.uploadDir, { recursive: true });
     }
 
     const urls: string[] = [];
@@ -44,12 +39,44 @@ export async function POST(req: NextRequest) {
       const ext = file.name.split(".").pop()?.toLowerCase() || "png";
       const id = crypto.randomBytes(8).toString("hex");
       const filename = `img-${Date.now()}-${id}.${ext}`;
-      const filepath = path.join(BRAND.uploadDir, filename);
+      const storagePath = filename; // flat structure in the bucket
 
-      const buffer = Buffer.from(await file.arrayBuffer());
-      fs.writeFileSync(filepath, buffer);
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-      urls.push(`${BRAND.uploadUrlPrefix}/${filename}`);
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(UPLOADS_BUCKET)
+        .upload(storagePath, buffer, {
+          contentType: file.type,
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("[UPLOAD ERROR]", uploadError);
+        if (uploadError.message?.includes("not found") || uploadError.message?.includes("Bucket")) {
+          return NextResponse.json(
+            {
+              error:
+                "Bucket storan 'uploads' belum wujud di Supabase. Sila cipta bucket awam bernama 'uploads' di Supabase Dashboard → Storage.",
+            },
+            { status: 500 }
+          );
+        }
+        return NextResponse.json(
+          { error: `Gagal memuat naik gambar: ${uploadError.message}` },
+          { status: 500 }
+        );
+      }
+
+      // Get the public URL for the uploaded file
+      const { data: publicUrlData } = supabase.storage
+        .from(UPLOADS_BUCKET)
+        .getPublicUrl(storagePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+      urls.push(publicUrl);
     }
 
     return NextResponse.json({ success: true, urls });

@@ -56,6 +56,17 @@ bun run db:push      # cipta skema pangkalan data di Supabase
 bun run seed         # tambah 7 laporan contoh + jana PDF
 ```
 
+### 3b. Cipta Storage Bucket di Supabase (WAJIB untuk muat naik gambar)
+
+Gambar aktiviti kursus disimpan di **Supabase Storage** (bukan filesystem tempatan), supaya ia berfungsi pada platform serverless (Vercel) dan mana-mana deployment cloud.
+
+1. Pergi ke **Supabase Dashboard** → **Storage** → **New bucket**
+2. Name: `uploads`
+3. Public: ✅ **tandai "Public bucket"** (supaya gambar boleh diakses tanpa auth)
+4. Klik **Create bucket**
+
+> Tanpa langkah ini, muat naik gambar akan gagal dengan ralat "Bucket not found".
+
 ### 4. Jalankan dev server
 
 ```bash

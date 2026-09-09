@@ -30,15 +30,41 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Laporan tidak dijumpai." }, { status: 404 });
     }
 
-    // Remove the generated PDF from disk
+    // Remove the generated PDF from local disk (if present — works on writable FS)
     if (report.urlPdf) {
       const filename = report.urlPdf.split("/").pop();
       if (filename) {
-        const fs = await import("fs");
-        const path = await import("path");
-        const pdfPath = path.join(process.cwd(), "public", "reports", filename);
-        if (fs.existsSync(pdfPath)) {
-          fs.unlinkSync(pdfPath);
+        try {
+          const fs = await import("fs");
+          const path = await import("path");
+          const pdfPath = path.join(process.cwd(), "public", "reports", filename);
+          if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+          }
+        } catch {
+          // Ignore filesystem errors (e.g., read-only FS on serverless) — PDF is tracked by URL in DB
+        }
+      }
+    }
+
+    // Remove uploaded images from Supabase Storage
+    let photos: string[] = [];
+    try {
+      photos = JSON.parse(report.gambarUrls || "[]");
+    } catch {
+      photos = [];
+    }
+    if (photos.length > 0) {
+      const { supabase, UPLOADS_BUCKET } = await import("@/lib/supabase");
+      const remotePaths = photos
+        .filter((p) => p.includes(`${UPLOADS_BUCKET}/`))
+        .map((p) => p.split(`${UPLOADS_BUCKET}/`)[1]?.split("?")[0])
+        .filter(Boolean) as string[];
+      if (remotePaths.length > 0) {
+        try {
+          await supabase.storage.from(UPLOADS_BUCKET).remove(remotePaths);
+        } catch {
+          // Best-effort cleanup; don't fail the delete if storage cleanup errors
         }
       }
     }

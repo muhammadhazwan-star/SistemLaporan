@@ -37,6 +37,47 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 import qrcode
 from PIL import Image as PILImage
+import urllib.request
+import tempfile
+
+# -------- Image path resolution (supports local files + remote Supabase URLs) --------
+def _resolve_image_path(p):
+    """Return a local file path for an image URL/path.
+    - Remote URLs (http/https) are downloaded to a temp file.
+    - Local absolute paths (/uploads/x.png) are resolved against PUBLIC_DIR.
+    - Bare paths are returned as-is if they exist.
+    Returns None if the image cannot be found/downloaded.
+    """
+    if not p:
+        return None
+    # Remote URL → download to temp file
+    if p.startswith("http://") or p.startswith("https://"):
+        try:
+            tmp = tempfile.NamedTemporaryFile(suffix=".img", delete=False)
+            tmp.close()
+            req = urllib.request.Request(p, headers={"User-Agent": "AlAminPDF/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                with open(tmp.name, "wb") as f:
+                    f.write(resp.read())
+            return tmp.name
+        except Exception as e:
+            sys.stderr.write(f"[PDF] Gagal muat turun gambar {p}: {e}\n")
+            return None
+    # Local absolute path like /uploads/x.png → resolve against PUBLIC_DIR
+    if p.startswith("/"):
+        public_dir = os.environ.get("PUBLIC_DIR", "/app/public")
+        abs_path = os.path.join(public_dir, p.lstrip("/"))
+        if os.path.exists(abs_path):
+            return abs_path
+        # Fallback to legacy sandbox path
+        legacy = os.path.join("/home/z/my-project/public", p.lstrip("/"))
+        if os.path.exists(legacy):
+            return legacy
+        return None
+    # Bare relative path
+    if os.path.exists(p):
+        return p
+    return None
 
 # -------- Brand colours (PRD §9.1) --------
 TURQUOISE = colors.HexColor("#0E8C96")
@@ -429,10 +470,10 @@ def build_pdf(report, out_path):
             chunk = photos[i:i + cols]
             row_imgs = []
             for p in chunk:
-                abs_path = os.path.join(os.environ.get("PUBLIC_DIR", "/app/public"), p.lstrip("/")) if p.startswith("/") else p
+                local_path = _resolve_image_path(p)
                 try:
-                    if os.path.exists(abs_path):
-                        img = Image(abs_path, width=cell_w - 8, height=cell_h - 6)
+                    if local_path:
+                        img = Image(local_path, width=cell_w - 8, height=cell_h - 6)
                         img.hAlign = "CENTER"
                         row_imgs.append(img)
                     else:
