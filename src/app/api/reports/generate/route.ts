@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { createZaiClient } from "@/lib/zai-client";
 
 // AI report generation endpoint.
 // Receives raw pasted course text and returns a structured report object
@@ -58,16 +58,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create ZAI client with retry (config file may take a moment to be detected on cold start)
+    // Create ZAI client (works via config file in sandbox, or env vars in production)
     let zai;
     let lastError: Error | null = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        zai = await ZAI.create();
+        zai = await createZaiClient();
         break;
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
-        console.error(`[AI GENERATE] ZAI.create() attempt ${attempt} failed:`, lastError.message);
+        console.error(`[AI GENERATE] createZaiClient() attempt ${attempt} failed:`, lastError.message);
         if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
       }
     }
@@ -75,13 +75,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Konfigurasi AI tidak dijumpai. Sila pastikan fail .z-ai-config wujud. Sila muat semula halaman dan cuba lagi.",
+            "Konfigurasi AI tidak dijumpai. Setkan ZAI_BASE_URL, ZAI_API_KEY, ZAI_CHAT_ID, ZAI_USER_ID & ZAI_TOKEN dalam environment variables platform deployment anda.",
         },
         { status: 503 }
       );
     }
 
-    let completion;
+    let completion: any;
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         completion = await zai.chat.completions.create({
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
         if (attempt < 2) {
           await new Promise((r) => setTimeout(r, 1500));
           // Re-create ZAI client on retry (in case of stale config)
-          try { zai = await ZAI.create(); } catch {}
+          try { zai = await createZaiClient(); } catch {}
         }
       }
     }

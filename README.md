@@ -86,21 +86,28 @@ Projek ini menggunakan **Docker** (Node.js + Python) kerana penjanaan PDF memerl
 1. Pergi ke **https://railway.app** → New Project → Deploy from GitHub repo
 2. Pilih repo `muhammadhazwan-star/SistemLaporan`
 3. Railway akan auto-detect `Dockerfile` dan build
-4. Tambah **Variables** (Environment Variables):
+4. Tambah **Variables** (Environment Variables) — WAJIB:
    ```
    DATABASE_URL=postgresql://postgres.briqnbwwfztfphyivefq:Hazwanrais%4012@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
    DIRECT_URL=postgresql://postgres.briqnbwwfztfphyivefq:Hazwanrais%4012@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres
+   ZAI_BASE_URL=https://internal-api.z.ai/v1
+   ZAI_API_KEY=Z.ai
+   ZAI_CHAT_ID=chat-b823f78e-3f23-4c87-af7f-72043298bd6a
+   ZAI_USER_ID=9c565faf-a0d6-489f-a2f9-f16fd4533684
+   ZAI_TOKEN=<your-jwt-token-from-z-ai-config>
    ```
-5. Tambah **Volume** untuk persistent storage (uploads/reports):
+5. Tambah **Volume** untuk persistent storage (reports PDF):
    - Mount path: `/app/public`
    - Size: 2GB
 6. Deploy → Railway akan beri URL awam (contoh: `https://sistemlaporan.up.railway.app`)
+
+> ⚠️ **ZAI_TOKEN**: salin nilai `token` penuh dari fail `.z-ai-config` (JWT yang panjang).
 
 ### Pilihan 2: Render
 
 1. Pergi ke **https://render.com** → New → Web Service → Connect repo GitHub
 2. Render akan auto-detect `render.yaml`
-3. Tambah environment variables yang sama (DATABASE_URL + DIRECT_URL)
+3. Tambah environment variables yang sama (DATABASE_URL, DIRECT_URL + semua ZAI_*)
 4. Deploy
 
 ### Pilihan 3: Docker (mana-mana VPS / cloud)
