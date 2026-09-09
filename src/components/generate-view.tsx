@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import {
   Sparkles, Upload, Loader2, FileText, Check, X, ImageIcon,
   Wand2, RotateCcw, Download, AlertCircle, ClipboardPaste, Calendar, Clock, MapPin, Users,
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { BRAND } from "@/lib/brand";
 import { Report } from "@/lib/types";
+import { detectFields, hasDetectedInfo } from "@/lib/smart-parse";
 
 interface GeneratedReport {
   namaKursus: string;
@@ -331,6 +332,9 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
             </p>
           </section>
 
+          {/* Real-time detected info preview */}
+          <RealtimePreview rawInput={rawInput} />
+
           {/* Generate button */}
           <div className="lg:col-span-3 flex flex-col gap-2">
             <button
@@ -618,6 +622,93 @@ function SectionBox({
         <h3 className="font-mono text-xs font-extrabold uppercase tracking-wide">{title}</h3>
       </div>
       <div className="p-4">{children}</div>
+    </section>
+  );
+}
+
+// ===== Real-time field detection preview =====
+function RealtimePreview({ rawInput }: { rawInput: string }) {
+  const detected = useMemo(() => detectFields(rawInput), [rawInput]);
+  const hasInfo = hasDetectedInfo(detected);
+
+  if (!hasInfo && rawInput.trim().length > 0) {
+    return (
+      <section className="brutal-card bg-secondary p-4 lg:col-span-3">
+        <div className="flex items-center gap-2">
+          <div className="border-2 border-foreground bg-background p-1">
+            <Sparkles className="h-3 w-3 text-foreground/40" />
+          </div>
+          <p className="font-mono text-[11px] uppercase tracking-wide text-foreground/60">
+            AI akan mula mengesan maklumat kursus apabila anda menaip...
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (!hasInfo) return null;
+
+  const fields: { label: string; value: string; icon: React.ReactNode; ok: boolean }[] = [
+    { label: "Nama Kursus", value: detected.namaKursus, icon: <FileText className="h-3 w-3" />, ok: !!detected.namaKursus },
+    { label: "Tarikh", value: detected.tarikh, icon: <Calendar className="h-3 w-3" />, ok: !!detected.tarikh },
+    { label: "Masa", value: detected.masa, icon: <Clock className="h-3 w-3" />, ok: !!detected.masa },
+    { label: "Lokasi", value: detected.lokasi, icon: <MapPin className="h-3 w-3" />, ok: !!detected.lokasi },
+    { label: "Kehadiran", value: detected.kehadiran || (detected.hadiran ? `${detected.hadiran}/${detected.jumlah}` : ""), icon: <Users className="h-3 w-3" />, ok: detected.hadiran > 0 },
+    { label: "Google Form", value: detected.pautanGform, icon: <Check className="h-3 w-3" />, ok: !!detected.pautanGform },
+  ];
+
+  const okCount = fields.filter((f) => f.ok).length;
+
+  return (
+    <section className="brutal-card bg-card p-4 lg:col-span-3">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="border-2 border-foreground bg-primary p-1">
+            <Sparkles className="h-3 w-3 text-primary-foreground" />
+          </div>
+          <h3 className="font-mono text-xs font-extrabold uppercase tracking-wide">
+            Maklumat Dikesan ({okCount}/{fields.length})
+          </h3>
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-wide text-primary">
+          ✓ Pra-papar sebelum AI jana
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {fields.map((f) => (
+          <div
+            key={f.label}
+            className={`border-2 p-2 ${f.ok ? "border-foreground bg-secondary" : "border-dashed border-foreground/30 bg-background opacity-60"}`}
+          >
+            <div className={`flex items-center gap-1 ${f.ok ? "text-primary" : "text-foreground/40"}`}>
+              {f.icon}
+              <span className="font-mono text-[9px] font-bold uppercase tracking-wide">{f.label}</span>
+            </div>
+            <p className={`mt-0.5 truncate text-xs ${f.ok ? "font-medium" : "italic text-foreground/40"}`}>
+              {f.ok ? f.value || "✓" : "— belum dijumpai —"}
+            </p>
+          </div>
+        ))}
+      </div>
+      {(detected.kelebihan || detected.kelemahan) && (
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {detected.kelebihan && (
+            <div className="border-2 border-foreground bg-secondary p-2">
+              <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-primary">✓ Kelebihan dikesan</span>
+              <p className="mt-0.5 text-[11px] text-foreground/70 line-clamp-2">{detected.kelebihan}</p>
+            </div>
+          )}
+          {detected.kelemahan && (
+            <div className="border-2 border-foreground bg-secondary p-2">
+              <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-destructive">! Kelemahan dikesan</span>
+              <p className="mt-0.5 text-[11px] text-foreground/70 line-clamp-2">{detected.kelemahan}</p>
+            </div>
+          )}
+        </div>
+      )}
+      <p className="mt-3 font-mono text-[10px] text-foreground/50">
+        💡 Klik "Jana Laporan dengan AI" untuk mengembangkan maklumat ini menjadi laporan profesional lengkap.
+      </p>
     </section>
   );
 }
