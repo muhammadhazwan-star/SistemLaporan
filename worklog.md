@@ -226,3 +226,30 @@ Stage Summary:
 - Config available in 2 locations: /etc/.z-ai-config (system) + ./.z-ai-config (project root, gitignored).
 - Retry logic handles transient failures gracefully without user-facing errors.
 - All changes pushed to GitHub.
+
+---
+Task ID: 19
+Agent: main (Z.ai Code)
+Task: Fix "EROFS: read-only file system" error on image upload (deployed on serverless/Vercel).
+
+Work Log:
+- Root cause: the app was deployed to a serverless platform (Vercel — path /var/task/ is characteristic) where the filesystem is read-only. The upload route tried to write to public/uploads/ which fails.
+- Solution: switch image storage from local filesystem to Supabase Storage (cloud, always read-write).
+- Installed @supabase/supabase-js.
+- Created src/lib/supabase.ts: server-side Supabase client using the publishable key + 'uploads' bucket name.
+- Rewrote /api/upload route: images now upload to Supabase Storage 'uploads' bucket via supabase.storage.from(bucket).upload(), then return the public URL. Returns a helpful 500 error if the bucket doesn't exist yet.
+- Updated PDF script (pdf_script.py): added _resolve_image_path() helper that:
+  - Downloads remote URLs (https://...supabase.co/storage/...) to temp files for embedding in PDF.
+  - Resolves local /uploads/ paths against PUBLIC_DIR (backward compatible).
+  - Falls back to legacy sandbox path.
+- Updated /api/reports/[id] DELETE route: now removes uploaded images from Supabase Storage (best-effort) in addition to local PDF cleanup.
+- Verified: lint clean, upload route returns helpful "bucket not found" message until user creates the bucket in Supabase Dashboard.
+- README updated with step 3b: create 'uploads' public bucket in Supabase Dashboard (required before image upload works).
+- Committed (d083ffe) and pushed to GitHub.
+
+Stage Summary:
+- ✅ Image uploads now go to Supabase Storage (cloud) — works on any platform (Vercel, Railway, Render, Docker).
+- ✅ PDF generation downloads remote image URLs for embedding (supports both Supabase URLs and local paths).
+- ✅ Delete route cleans up Supabase Storage images.
+- USER ACTION REQUIRED: create 'uploads' public bucket in Supabase Dashboard → Storage before image upload will work.
+- All changes pushed to GitHub (d083ffe).
