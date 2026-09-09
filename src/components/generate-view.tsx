@@ -93,10 +93,72 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
       setStage("preview");
       toast.success("Laporan berjaya dijana oleh AI. Sila semak dan sunting jika perlu.");
     } catch (err) {
-      setStage("input");
-      toast.error(err instanceof Error ? err.message : "Ralat penjanaan AI");
+      const errMsg = err instanceof Error ? err.message : "Ralat penjanaan AI";
+      // If AI fails (e.g. deployed outside sandbox), offer manual mode
+      if (errMsg.includes("fetch failed") || errMsg.includes("tidak dijumpai") || errMsg.includes("Konfigurasi AI")) {
+        toast.error("AI tidak tersedia. Beralih ke Mod Manual.", {
+          description: "Anda boleh isi kandungan laporan secara manual di bawah.",
+          duration: 6000,
+        });
+        // Build a best-effort blank report from raw input
+        const lines = rawInput.split("\n").filter((l) => l.trim());
+        const namaKursus = lines.find((l) => /kursus/i.test(l))?.replace(/^.*:\s*/, "") || "Kursus Latihan";
+        const tarikh = lines.find((l) => /tarikh/i.test(l))?.replace(/^.*:\s*/, "") || "";
+        const masa = lines.find((l) => /masa/i.test(l))?.replace(/^.*:\s*/, "") || "";
+        const lokasi = lines.find((l) => /lokasi/i.test(l))?.replace(/^.*:\s*/, "") || "";
+        const kehadiran = lines.find((l) => /hadiran/i.test(l))?.replace(/^.*:\s*/, "") || "";
+        const pautanGform = lines.find((l) => /gform|form/i.test(l))?.replace(/^.*:\s*/, "") || "";
+        const report: GeneratedReport = {
+          namaKursus,
+          tarikh: tarikh || "N/A",
+          masa: masa || "N/A",
+          lokasi: lokasi || "N/A",
+          kehadiran: kehadiran || "N/A",
+          hadiran: 0,
+          jumlah: 0,
+          ringkasanAi: "",
+          kelebihanAi: "",
+          kelemahanAi: "",
+          cadanganAi: "",
+          pautanGform,
+        };
+        setReport(report);
+        setStage("preview");
+      } else {
+        setStage("input");
+        toast.error(errMsg);
+      }
     }
   }, [rawInput, penyedia]);
+
+  // ---- Manual mode (skip AI, go straight to editable blank report) ----
+  const handleManual = useCallback(() => {
+    const lines = rawInput.split("\n").filter((l) => l.trim());
+    const namaKursus = lines.find((l) => /kursus/i.test(l))?.replace(/^.*:\s*/, "") || "Kursus Latihan";
+    const tarikh = lines.find((l) => /tarikh/i.test(l))?.replace(/^.*:\s*/, "") || "";
+    const masa = lines.find((l) => /masa/i.test(l))?.replace(/^.*:\s*/, "") || "";
+    const lokasi = lines.find((l) => /lokasi/i.test(l))?.replace(/^.*:\s*/, "") || "";
+    const kehadiran = lines.find((l) => /hadiran/i.test(l))?.replace(/^.*:\s*/, "") || "";
+    const pautanGform = lines.find((l) => /gform|form/i.test(l))?.replace(/^.*:\s*/, "") || "";
+    setReport({
+      namaKursus,
+      tarikh: tarikh || "N/A",
+      masa: masa || "N/A",
+      lokasi: lokasi || "N/A",
+      kehadiran: kehadiran || "N/A",
+      hadiran: 0,
+      jumlah: 0,
+      ringkasanAi: "",
+      kelebihanAi: "",
+      kelemahanAi: "",
+      cadanganAi: "",
+      pautanGform,
+    });
+    setStage("preview");
+    toast.info("Mod Manual diaktifkan", {
+      description: "Isi kandungan laporan secara manual di bawah.",
+    });
+  }, [rawInput]);
 
   // ---- Save + PDF ----
   const handleConfirm = useCallback(async () => {
@@ -270,7 +332,7 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
           </section>
 
           {/* Generate button */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 flex flex-col gap-2">
             <button
               onClick={handleGenerate}
               disabled={rawInput.trim().length < 10}
@@ -279,6 +341,16 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
               <Sparkles className="h-5 w-5" />
               Jana Laporan dengan AI
             </button>
+            <button
+              onClick={handleManual}
+              className="brutal-btn brutal-btn-outline flex w-full items-center justify-center gap-2 px-4 py-3 text-sm"
+            >
+              <FileText className="h-4 w-4" />
+              Mod Manual (Tanpa AI)
+            </button>
+            <p className="text-center font-mono text-[10px] text-foreground/50">
+              Mod Manual berguna jika AI tidak tersedia atau anda mahu isi laporan sendiri.
+            </p>
           </div>
         </div>
       )}
@@ -418,10 +490,16 @@ function PreviewEditor({
 
       {/* Ringkasan */}
       <SectionBox title="Ringkasan Kursus" tone="primary">
+        {!report.ringkasanAi && (
+          <p className="mb-2 border-2 border-accent bg-secondary p-2 font-mono text-[11px] text-foreground/70">
+            ✏️ Mod Manual: AI tidak tersedia. Sila isi ringkasan kursus secara manual di bawah.
+          </p>
+        )}
         <Textarea
           value={report.ringkasanAi}
           onChange={(e) => update({ ringkasanAi: e.target.value })}
           className="brutal-input min-h-[90px] resize-y text-sm leading-relaxed"
+          placeholder="Tulis ringkasan eksekutif kursus di sini..."
         />
       </SectionBox>
 
