@@ -49,23 +49,15 @@ DIRECT_URL=postgresql://postgres.YOUR_PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.poo
 
 > **Nota**: `DATABASE_URL` guna connection pooler (port 6543, PgBouncer) untuk runtime, manakala `DIRECT_URL` guna direct connection (port 5432) untuk Prisma migrations/db push. Password yang mengandungi `@` perlu di-URL-encode sebagai `%40`.
 
-### 3. Sediakan pangkalan data
+### 3. Sediakan pangkalan data + storan
 
 ```bash
-bun run db:push      # cipta skema pangkalan data di Supabase
-bun run seed         # tambah 7 laporan contoh + jana PDF
+bun run db:push          # cipta skema pangkalan data di Supabase
+bun run setup-storage    # cipta bucket 'uploads' di Supabase Storage (untuk gambar)
+bun run seed             # tambah 7 laporan contoh + jana PDF
 ```
 
-### 3b. Cipta Storage Bucket di Supabase (WAJIB untuk muat naik gambar)
-
-Gambar aktiviti kursus disimpan di **Supabase Storage** (bukan filesystem tempatan), supaya ia berfungsi pada platform serverless (Vercel) dan mana-mana deployment cloud.
-
-1. Pergi ke **Supabase Dashboard** → **Storage** → **New bucket**
-2. Name: `uploads`
-3. Public: ✅ **tandai "Public bucket"** (supaya gambar boleh diakses tanpa auth)
-4. Klik **Create bucket**
-
-> Tanpa langkah ini, muat naik gambar akan gagal dengan ralat "Bucket not found".
+> `setup-storage` mencipta bucket awam `uploads` di Supabase Storage secara automatik (tidak perlu buat manual di Dashboard). Bucket ini menyimpan gambar aktiviti kursus yang dimuat naik.
 
 ### 4. Jalankan dev server
 
