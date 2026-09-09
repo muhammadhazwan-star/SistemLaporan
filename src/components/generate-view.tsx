@@ -75,7 +75,7 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
     }
   }, []);
 
-  // ---- AI generate ----
+  // ---- Auto-generate report from keyword detection ----
   const handleGenerate = useCallback(async () => {
     if (rawInput.trim().length < 10) {
       toast.error("Sila tampal maklumat kursus (minimum 10 aksara) sebelum menjana laporan.");
@@ -89,46 +89,13 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
         body: JSON.stringify({ rawInput, penyedia }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "AI gagal menjana laporan");
+      if (!res.ok) throw new Error(data.error || "Gagal menjana laporan");
       setReport(data.report);
       setStage("preview");
-      toast.success("Laporan berjaya dijana oleh AI. Sila semak dan sunting jika perlu.");
+      toast.success("Laporan berjaya dijana. Sila semak dan sunting jika perlu.");
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Ralat penjanaan AI";
-      // If AI fails (e.g. deployed outside sandbox), offer manual mode
-      if (errMsg.includes("fetch failed") || errMsg.includes("tidak dijumpai") || errMsg.includes("Konfigurasi AI")) {
-        toast.error("AI tidak tersedia. Beralih ke Mod Manual.", {
-          description: "Anda boleh isi kandungan laporan secara manual di bawah.",
-          duration: 6000,
-        });
-        // Build a best-effort blank report from raw input
-        const lines = rawInput.split("\n").filter((l) => l.trim());
-        const namaKursus = lines.find((l) => /kursus/i.test(l))?.replace(/^.*:\s*/, "") || "Kursus Latihan";
-        const tarikh = lines.find((l) => /tarikh/i.test(l))?.replace(/^.*:\s*/, "") || "";
-        const masa = lines.find((l) => /masa/i.test(l))?.replace(/^.*:\s*/, "") || "";
-        const lokasi = lines.find((l) => /lokasi/i.test(l))?.replace(/^.*:\s*/, "") || "";
-        const kehadiran = lines.find((l) => /hadiran/i.test(l))?.replace(/^.*:\s*/, "") || "";
-        const pautanGform = lines.find((l) => /gform|form/i.test(l))?.replace(/^.*:\s*/, "") || "";
-        const report: GeneratedReport = {
-          namaKursus,
-          tarikh: tarikh || "N/A",
-          masa: masa || "N/A",
-          lokasi: lokasi || "N/A",
-          kehadiran: kehadiran || "N/A",
-          hadiran: 0,
-          jumlah: 0,
-          ringkasanAi: "",
-          kelebihanAi: "",
-          kelemahanAi: "",
-          cadanganAi: "",
-          pautanGform,
-        };
-        setReport(report);
-        setStage("preview");
-      } else {
-        setStage("input");
-        toast.error(errMsg);
-      }
+      setStage("input");
+      toast.error(err instanceof Error ? err.message : "Ralat penjanaan laporan");
     }
   }, [rawInput, penyedia]);
 
@@ -342,18 +309,18 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
               disabled={rawInput.trim().length < 10}
               className="brutal-btn brutal-btn-primary flex w-full items-center justify-center gap-2 bg-primary px-4 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Sparkles className="h-5 w-5" />
-              Jana Laporan dengan AI
+              <Wand2 className="h-5 w-5" />
+              Jana Laporan
             </button>
             <button
               onClick={handleManual}
               className="brutal-btn brutal-btn-outline flex w-full items-center justify-center gap-2 px-4 py-3 text-sm"
             >
               <FileText className="h-4 w-4" />
-              Mod Manual (Tanpa AI)
+              Mod Manual
             </button>
             <p className="text-center font-mono text-[10px] text-foreground/50">
-              Mod Manual berguna jika AI tidak tersedia atau anda mahu isi laporan sendiri.
+              Sistem auto-kesan maklumat berdasarkan kata kunci. Mod Manual untuk isi kosong sendiri.
             </p>
           </div>
         </div>
@@ -368,10 +335,10 @@ export function GenerateView({ onSaved }: { onSaved: () => void }) {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <div>
             <p className="font-mono text-sm font-bold uppercase tracking-wide">
-              AI sedang menjana laporan...
+              Menjana laporan...
             </p>
             <p className="font-mono text-[11px] text-foreground/60">
-              GLM memproses maklumat kursus anda. Sila tunggu.
+              Sistem mengesan maklumat kursus berdasarkan kata kunci.
             </p>
           </div>
         </div>

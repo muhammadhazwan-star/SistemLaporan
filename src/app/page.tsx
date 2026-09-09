@@ -31,7 +31,7 @@ export default function Home() {
                   <span className="opacity-60">/</span>
                   {BRAND.module}
                   <span className="opacity-60">/</span>
-                  Berkuasa AI GLM
+                  Berkuasa Auto-Deteksi Kata Kunci
                   <span className="opacity-60">/</span>
                   Latihan Guru &amp; Staf
                 </span>
@@ -63,7 +63,7 @@ export default function Home() {
                 Laporan Kursus
               </p>
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
-                Berbantukan AI · GLM
+                Auto-Jana · Kata Kunci
               </p>
             </div>
           </div>
